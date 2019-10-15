@@ -1,49 +1,33 @@
-import {Request, Response} from 'express';
-import User from '../Entity/User';
-import { Role } from '../Entity/Role';
+import { Request, Response } from "express";
+import User from "../Entities/User";
 
-export class UserController{
 
-    public static store(req: Request, res: Response) {
+export class UserController {
+
+    public static async save(req: Request, res: Response) {
+        const hash = require("object-hash");
+
+        const { name, dni, password } = req.body;
+        
         const user = new User();
+        user.setName(name);
+        user.setDni(dni);
+        user.setPass(hash(password, { algorithm: 'sha3-512', encoding: 'base64' }));
 
-        const {username, password} = req.body;
-
-        user.isBlocked = false;
-        user.username = username;
-        user.password = password;
-
-        try{
-            user.save();
+        try {
+            await user.save();
+            user.setPass("");
+            res.status(201).json({ user });
         } catch (error) {
             res.status(500).json(error);
         }
-
-        res.json({user});
     }
 
-    public static async show(req: Request, res: Response){
-        const {id} = req.params;
-        const user = await User.findOne(id, {relations: ['roles']});
-        res.json({user});
+    public static async read(req: Request, res: Response) {
+        const { id } = req.params;
+        const user = await User.findOne(id);
+        if (user) { user.setPass(""); }
+        res.status(200).json({ user });
     }
 
-    public static async update(req: Request, res: Response){
-        const {id} = req.params;
-        const roleName = req.body.role;
-
-        const user: User = await User.findOne(id);
-
-        try{
-          const role: Role = await Role.findOneOrFail({ where: { name: roleName} });
-
-          user.addRole(role);
-          user.save();
-
-        } catch(e) {
-          res.status(500).json(e);
-        }
-
-        res.json({user});
-    }
 }

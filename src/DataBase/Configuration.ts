@@ -1,10 +1,9 @@
-import {createConnection} from "typeorm";
-import User from '../Entity/User';
-import { Role } from "../Entity/Role";
+import { createConnection } from "typeorm";
+import User from '../Entities/User';
 
 
-export async function createConnectionDB(){
-
+export async function createConnectionDB() {
+    
     await createConnection({
         type: "mysql",
         host: process.env.DATABASE_HOST,
@@ -14,6 +13,7 @@ export async function createConnectionDB(){
         database: process.env.DATABASE_DB,
         synchronize: true,
         logging: true,
-        entities: [User, Role]
+        entities: [User]
     });
+
 };
